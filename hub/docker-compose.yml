@@ -13,7 +13,7 @@ services:
     container_name: homeassistant
     image: homeassistant/home-assistant:stable
     volumes:
-      - ${HOME}/homeassistant/config:/config
+      - /docker/homeassistant/config:/config
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
@@ -32,7 +32,7 @@ services:
     cap_add:
       - NET_ADMIN
     volumes:
-      - ${HOME}/swag/config:/config
+      - /docker/swag/config:/config
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
@@ -68,7 +68,7 @@ services:
 #      - "51821:51821/tcp"
 #    restart: unless-stopped
 #    volumes:
-#      - ${HOME}/wg-easy/.wg-easy:/etc/wireguard
+#      - /docker/wg-easy/.wg-easy:/etc/wireguard
 #      - /etc/timezone:/etc/timezone:ro
 #      - /etc/localtime:/etc/localtime:ro
 #    labels:
@@ -88,7 +88,7 @@ services:
       - CHART_DATETIME_FORMAT=j/m G:i
       - DATETIME_FORMAT=j M Y, G:i:s
     volumes:
-      - ${HOME}/speedtest-tracker/config:/config
+      - /docker/speedtest-tracker/config:/config
     ports:
       - "8080:80"
       - "8443:443"
