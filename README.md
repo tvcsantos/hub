@@ -1,6 +1,6 @@
 # HUB – Home Unified with Berry
 
-![HUB](img.png)
+![HUB](img/logo_medium.png)
 
 A raspberry pi compose stack for home automation.
 
