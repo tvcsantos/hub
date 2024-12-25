@@ -9,18 +9,6 @@ services:
       - WATCHTOWER_LABEL_ENABLE=true
       - WATCHTOWER_CLEANUP=true
       - TZ=${STACK_TIMEZONE}
-  portainer:
-    container_name: portainer
-    image: portainer/portainer-ce:latest
-    ports:
-      - "9000:9000"
-      - "9443:9443"
-    volumes:
-      - ${HOME}/portainer/data:/data
-      - /var/run/docker.sock:/var/run/docker.sock
-    restart: unless-stopped
-    labels:
-      com.centurylinklabs.watchtower.enable: "true"
   homeassistant:
     container_name: homeassistant
     image: homeassistant/home-assistant:stable
