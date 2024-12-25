@@ -97,8 +97,8 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
 
 # set trusted docker internal network
-#networks:
-#  default:
-#    ipam:
-#      config:
-#        - subnet: ${DOCKER_INTERNAL_SUBNET}
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: ${DOCKER_INTERNAL_SUBNET}
