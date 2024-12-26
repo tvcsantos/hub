@@ -17,6 +17,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
+      - ${GOOGLE_DRIVE_MOUNT}:/mnt/gdrive
     environment:
       - TZ=${STACK_TIMEZONE}
       - DISABLE_JEMALLOC=true
