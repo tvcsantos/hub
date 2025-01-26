@@ -52,3 +52,11 @@ A raspberry pi compose stack for home automation.
     SPEEDTEST_TRACKER_APP_KEY=base64:YWJjZDEyMzQ=
     DOCKER_INTERNAL_SUBNET=123.0.0.0/24
     ```
+
+## Troubleshooting
+
+- If you have issues with the bluetooth service, check the [Bluetooth](docs/bluetooth.md) documentation.
+
+## License
+
+This project is released under [MIT License](LICENSE).
