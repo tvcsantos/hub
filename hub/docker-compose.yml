@@ -119,6 +119,19 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     restart: unless-stopped
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    ports:
+      - "4000:4000"
+    environment:
+      # Set whichever provider vars your config needs (example: Azure)
+      AZURE_API_KEY: ${AZURE_API_KEY}
+      AZURE_API_BASE: ${AZURE_API_BASE}
+      # If you’re using OpenAI instead, use OPENAI_API_KEY, etc.
+      # OPENAI_API_KEY: ${OPENAI_API_KEY}
+    volumes:
+      - /docker/litellm/litellm_config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--detailed_debug"]
 
 # set trusted docker internal network
 networks:
