@@ -133,6 +133,45 @@ services:
     volumes:
       - /docker/litellm/litellm_config.yaml:/app/config.yaml:ro
     command: ["--config", "/app/config.yaml", "--detailed_debug"]
+  piper:
+    image: rhasspy/wyoming-piper:latest
+    container_name: piper
+    restart: unless-stopped
+    # Exposes the Wyoming TCP port for TTS (not HTTP)
+    ports:
+      - "10200:10200"
+    command: >
+      --voice pt_PT-raquel-medium
+      --uri tcp://0.0.0.0:10200
+      --data-dir /data
+      --download-dir /data
+    volumes:
+      - /docker/piper:/data
+    # Allow direct access to speakers if you want the container to play audio
+    # (most folks synthesize to WAV and play on host instead)
+    devices:
+      - "/dev/snd:/dev/snd"
+    group_add:
+      - "audio"
+  whisper:
+    image: rhasspy/wyoming-whisper:latest
+    container_name: whisper
+    restart: unless-stopped
+    ports:
+      - "10300:10300"
+    # tiny / base / small / medium / large-v3; use *-int8 for Pi 5 speed
+    command: >
+      --model tiny-int8
+      --language pt
+      --uri tcp://0.0.0.0:10300
+      --data-dir /data
+      --download-dir /data
+    volumes:
+      - /docker/whisper:/data
+    devices:
+      - "/dev/snd:/dev/snd"
+    group_add:
+      - "audio"
 
 # set trusted docker internal network
 networks:
