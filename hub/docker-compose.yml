@@ -141,7 +141,7 @@ services:
     ports:
       - "10200:10200"
     command: >
-      --voice pt_PT-raquel-medium
+      --voice "pt_PT-tugão-medium"
       --uri tcp://0.0.0.0:10200
       --data-dir /data
       --download-dir /data
