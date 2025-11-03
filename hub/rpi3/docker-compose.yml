@@ -1,0 +1,161 @@
+services:
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_CLEANUP=true
+      - TZ=${STACK_TIMEZONE}
+  homeassistant:
+    container_name: homeassistant
+    image: homeassistant/home-assistant:stable
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - /docker/homeassistant/config:/config
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+      - ${GOOGLE_DRIVE_MOUNT}:/mnt/gdrive
+    environment:
+      - TZ=${STACK_TIMEZONE}
+      - DISABLE_JEMALLOC=true
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+  swag:
+    container_name: swag
+    image: linuxserver/swag:3.0.1
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - /docker/swag/config:/config
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - PGID=1000
+      - PUID=1000
+      - EMAIL=${DUCK_DNS_EMAIL}
+      - URL=${DUCK_DNS_URL}
+      - SUBDOMAINS=wildcard
+      - VALIDATION=duckdns
+      - TZ=${STACK_TIMEZONE}
+      - DUCKDNSTOKEN=${DUCK_DNS_TOKEN}
+    ports:
+      - "180:80"
+      - "1443:443"
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+  wg-easy:
+    container_name: wg-easy
+    image: ghcr.io/wg-easy/wg-easy:14
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+    environment:
+      - TZ=${STACK_TIMEZONE}
+      - WG_HOST=${DUCK_DNS_URL}
+      - PASSWORD_HASH=${WG_EASY_PASSWORD_HASH}
+      - "WG_ALLOWED_IPS=${WG_EASY_ALLOWED_IPS}"
+    ports:
+      - "51820:51820/udp"
+      - "51821:51821/tcp"
+    restart: unless-stopped
+    volumes:
+      - /docker/wg-easy/.wg-easy:/etc/wireguard
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+  speedtest-tracker:
+    image: lscr.io/linuxserver/speedtest-tracker:latest
+    container_name: speedtest-tracker
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${STACK_TIMEZONE}
+      - APP_KEY=${SPEEDTEST_TRACKER_APP_KEY}
+      - APP_TIMEZONE=${STACK_TIMEZONE}
+      - DB_CONNECTION=sqlite
+      - DISPLAY_TIMEZONE=${STACK_TIMEZONE}
+      - SPEEDTEST_SCHEDULE=6 */2 * * *
+      - CHART_DATETIME_FORMAT=j/m G:i
+      - DATETIME_FORMAT=j M Y, G:i:s
+    volumes:
+      - /docker/speedtest-tracker/config:/config
+    ports:
+      - "8080:80"
+      - "8443:443"
+    restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+  litellm:
+    container_name: litellm
+    image: ghcr.io/berriai/litellm:main-latest
+    ports:
+      - "4000:4000"
+    environment:
+      # Set whichever provider vars your config needs (example: Azure)
+      AZURE_API_KEY: ${AZURE_API_KEY}
+      AZURE_API_BASE: ${AZURE_API_BASE}
+      # If you’re using OpenAI instead, use OPENAI_API_KEY, etc.
+      # OPENAI_API_KEY: ${OPENAI_API_KEY}
+    volumes:
+      - /docker/litellm/litellm_config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--detailed_debug"]
+  piper:
+    image: rhasspy/wyoming-piper:latest
+    container_name: piper
+    restart: unless-stopped
+    # Exposes the Wyoming TCP port for TTS (not HTTP)
+    ports:
+      - "10200:10200"
+    command: >
+      --voice "pt_PT-tugão-medium"
+      --uri tcp://0.0.0.0:10200
+      --data-dir /data
+      --download-dir /data
+    volumes:
+      - /docker/piper:/data
+    # Allow direct access to speakers if you want the container to play audio
+    # (most folks synthesize to WAV and play on host instead)
+    devices:
+      - "/dev/snd:/dev/snd"
+    group_add:
+      - "audio"
+  whisper:
+    image: rhasspy/wyoming-whisper:latest
+    container_name: whisper
+    restart: unless-stopped
+    ports:
+      - "10300:10300"
+    # tiny / base / small / medium / large-v3; use *-int8 for Pi 5 speed
+    command: >
+      --model tiny-int8
+      --language pt
+      --uri tcp://0.0.0.0:10300
+      --data-dir /data
+      --download-dir /data
+    volumes:
+      - /docker/whisper:/data
+    devices:
+      - "/dev/snd:/dev/snd"
+    group_add:
+      - "audio"
+
+# set trusted docker internal network
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: ${DOCKER_INTERNAL_SUBNET}
