@@ -157,7 +157,8 @@ services:
       - "audio"
   tailscale-swag:
     image: tailscale/tailscale:latest
-    hostname: banana
+    container_name: tailscale-swag
+    hostname: tsswag
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
       - TS_EXTRA_ARGS=--advertise-tags=tag:container
@@ -170,28 +171,6 @@ services:
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
-
-#  tailscale-nginx:
-#    image: tailscale/tailscale:latest
-#    hostname: banana
-#    environment:
-#      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
-#      - TS_EXTRA_ARGS=--advertise-tags=tag:container
-#      - TS_STATE_DIR=/var/lib/tailscale
-#      - TS_USERSPACE=false
-#    volumes:
-#      - /docker/tailscale-nginx/state:/var/lib/tailscale
-#    devices:
-#      - /dev/net/tun:/dev/net/tun
-#    cap_add:
-#      - NET_ADMIN
-#    restart: unless-stopped
-#  nginx:
-#    image: nginx
-#    depends_on:
-#      - tailscale-nginx
-#    network_mode: service:tailscale-nginx
-
 
 # set trusted docker internal network
 networks:
