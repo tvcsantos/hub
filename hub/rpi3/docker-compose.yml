@@ -154,7 +154,7 @@ services:
       - "audio"
   tailscale-nginx:
     image: tailscale/tailscale:latest
-    hostname: cherry
+    hostname: banana
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
       - TS_EXTRA_ARGS=--advertise-tags=tag:container
