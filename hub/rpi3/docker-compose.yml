@@ -48,11 +48,14 @@ services:
       - VALIDATION=duckdns
       - TZ=${STACK_TIMEZONE}
       - DUCKDNSTOKEN=${DUCK_DNS_TOKEN}
-    ports:
-      - "180:80"
-      - "1443:443"
+    #ports:
+    #  - "180:80"
+    #  - "1443:443"
     labels:
       com.centurylinklabs.watchtower.enable: "true"
+    depends_on:
+      - tailscale-swag
+    network_mode: service:tailscale-swag
   wg-easy:
     container_name: wg-easy
     image: ghcr.io/wg-easy/wg-easy:14
@@ -152,7 +155,7 @@ services:
       - "/dev/snd:/dev/snd"
     group_add:
       - "audio"
-  tailscale-nginx:
+  tailscale-swag:
     image: tailscale/tailscale:latest
     hostname: banana
     environment:
@@ -161,17 +164,34 @@ services:
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=false
     volumes:
-      - /docker/tailscale-nginx/state:/var/lib/tailscale
+      - /docker/tailscale-swag/state:/var/lib/tailscale
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
-  nginx:
-    image: nginx
-    depends_on:
-      - tailscale-nginx
-    network_mode: service:tailscale-nginx
+
+#  tailscale-nginx:
+#    image: tailscale/tailscale:latest
+#    hostname: banana
+#    environment:
+#      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+#      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+#      - TS_STATE_DIR=/var/lib/tailscale
+#      - TS_USERSPACE=false
+#    volumes:
+#      - /docker/tailscale-nginx/state:/var/lib/tailscale
+#    devices:
+#      - /dev/net/tun:/dev/net/tun
+#    cap_add:
+#      - NET_ADMIN
+#    restart: unless-stopped
+#  nginx:
+#    image: nginx
+#    depends_on:
+#      - tailscale-nginx
+#    network_mode: service:tailscale-nginx
+
 
 # set trusted docker internal network
 networks:
