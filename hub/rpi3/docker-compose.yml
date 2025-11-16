@@ -164,8 +164,10 @@ services:
       - TS_EXTRA_ARGS=--advertise-tags=tag:container
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=false
+      - TS_SERVER_CONFIG=/config/tailscale.json
     volumes:
       - /docker/tailscale-swag/state:/var/lib/tailscale
+      - /docker/tailscale-swag/config:/config
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
