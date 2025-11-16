@@ -173,6 +173,24 @@ services:
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
+  ts-homeassistant:
+    image: tailscale/tailscale:latest
+    container_name: homeassistant
+    hostname: ts-homeassistant
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      #- TS_SERVE_CONFIG=/config/tailscale.json
+    volumes:
+      - /docker/tailscale-swag/state:/var/lib/tailscale
+      - /docker/tailscale-swag/config:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
 
 # set trusted docker internal network
 networks:
