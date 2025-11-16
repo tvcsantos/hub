@@ -48,14 +48,14 @@ services:
       - VALIDATION=duckdns
       - TZ=${STACK_TIMEZONE}
       - DUCKDNSTOKEN=${DUCK_DNS_TOKEN}
-    #ports:
-    #  - "180:80"
-    #  - "1443:443"
+    ports:
+      - "180:80"
+      - "1443:443"
     labels:
       com.centurylinklabs.watchtower.enable: "true"
-    depends_on:
-      - tailscale-swag
-    network_mode: service:tailscale-swag
+#    depends_on:
+#      - ts-swag
+#    network_mode: service:ts-swag
   wg-easy:
     container_name: wg-easy
     image: ghcr.io/wg-easy/wg-easy:14
@@ -155,42 +155,22 @@ services:
       - "/dev/snd:/dev/snd"
     group_add:
       - "audio"
-  tailscale-swag:
-    image: tailscale/tailscale:latest
-    container_name: tailscale-swag
-    hostname: tsswag
-    environment:
-      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
-      - TS_EXTRA_ARGS=--advertise-tags=tag:container
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=false
-      - TS_SERVE_CONFIG=/config/tailscale.json
-    volumes:
-      - /docker/tailscale-swag/state:/var/lib/tailscale
-      - /docker/tailscale-swag/config:/config
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - NET_ADMIN
-    restart: unless-stopped
-  ts-homeassistant:
-    image: tailscale/tailscale:latest
-    container_name: homeassistant
-    hostname: ts-homeassistant
-    environment:
-      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
-      - TS_EXTRA_ARGS=--advertise-tags=tag:container
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=false
-      #- TS_SERVE_CONFIG=/config/tailscale.json
-    volumes:
-      - /docker/tailscale-swag/state:/var/lib/tailscale
-      - /docker/tailscale-swag/config:/config
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - NET_ADMIN
-    restart: unless-stopped
+#  ts-swag:
+#    image: tailscale/tailscale:latest
+#    container_name: ts-swag
+#    hostname: ts-swag
+#    environment:
+#      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+#      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+#      - TS_STATE_DIR=/var/lib/tailscale
+#      - TS_USERSPACE=false
+#    volumes:
+#      - /docker/ts-swag/state:/var/lib/tailscale
+#    devices:
+#      - /dev/net/tun:/dev/net/tun
+#    cap_add:
+#      - NET_ADMIN
+#    restart: unless-stopped
 
 # set trusted docker internal network
 networks:
