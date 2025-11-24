@@ -12,6 +12,9 @@ services:
   homeassistant:
     container_name: homeassistant
     image: homeassistant/home-assistant:stable
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     volumes:
       - /docker/homeassistant/config:/config
       - /etc/timezone:/etc/timezone:ro
@@ -24,54 +27,6 @@ services:
     restart: unless-stopped
     privileged: true
     network_mode: host
-    labels:
-      com.centurylinklabs.watchtower.enable: "true"
-  swag:
-    container_name: swag
-    image: linuxserver/swag:3.0.1
-    restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - /docker/swag/config:/config
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      - PGID=1000
-      - PUID=1000
-      - EMAIL=${DUCK_DNS_EMAIL}
-      - URL=${DUCK_DNS_URL}
-      - SUBDOMAINS=wildcard
-      - VALIDATION=duckdns
-      - TZ=${STACK_TIMEZONE}
-      - DUCKDNSTOKEN=${DUCK_DNS_TOKEN}
-    ports:
-      - "180:80"
-      - "1443:443"
-    labels:
-      com.centurylinklabs.watchtower.enable: "true"
-  wg-easy:
-    container_name: wg-easy
-    image: ghcr.io/wg-easy/wg-easy:14
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-    sysctls:
-      - net.ipv4.ip_forward=1
-      - net.ipv4.conf.all.src_valid_mark=1
-    environment:
-      - TZ=${STACK_TIMEZONE}
-      - WG_HOST=${DUCK_DNS_URL}
-      - PASSWORD_HASH=${WG_EASY_PASSWORD_HASH}
-      - "WG_ALLOWED_IPS=${WG_EASY_ALLOWED_IPS}"
-    ports:
-      - "51820:51820/udp"
-      - "51821:51821/tcp"
-    restart: unless-stopped
-    volumes:
-      - /docker/wg-easy/.wg-easy:/etc/wireguard
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
     labels:
       com.centurylinklabs.watchtower.enable: "true"
   speedtest-tracker:
@@ -96,29 +51,6 @@ services:
     restart: unless-stopped
     labels:
       com.centurylinklabs.watchtower.enable: "true"
-#  ollama:
-#    volumes:
-#      - /docker/ollama:/root/.ollama
-#    container_name: ollama
-#    pull_policy: always
-#    tty: true
-#    restart: unless-stopped
-#    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
-#  open-webui:
-#    image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
-#    container_name: open-webui
-#    volumes:
-#      - /docker/open-webui:/app/backend/data
-#    depends_on:
-#      - ollama
-#    ports:
-#      - ${OPEN_WEBUI_PORT-3000}:8080
-#    environment:
-#      - 'OLLAMA_BASE_URL=http://ollama:11434'
-#      - 'WEBUI_SECRET_KEY='
-#    extra_hosts:
-#      - host.docker.internal:host-gateway
-#    restart: unless-stopped
   litellm:
     container_name: litellm
     image: ghcr.io/berriai/litellm:main-latest
@@ -172,6 +104,26 @@ services:
       - "/dev/snd:/dev/snd"
     group_add:
       - "audio"
+  ts-homeassistant:
+    image: tailscale/tailscale:latest
+    container_name: ts-homeassistant
+    hostname: ${HOME_ASSISTANT_HOSTNAME}
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_SERVE_CONFIG=/config/tailscale.json
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /docker/ts-homeassistant/state:/var/lib/tailscale
+      - /docker/ts-homeassistant/config:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
 
 # set trusted docker internal network
 networks:

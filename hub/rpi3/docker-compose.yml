@@ -107,7 +107,7 @@ services:
   ts-homeassistant:
     image: tailscale/tailscale:latest
     container_name: ts-homeassistant
-    hostname: hass-puma
+    hostname: ${HOME_ASSISTANT_HOSTNAME}
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
       - TS_EXTRA_ARGS=--advertise-tags=tag:container
