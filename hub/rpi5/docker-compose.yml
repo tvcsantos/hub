@@ -9,6 +9,7 @@ services:
       - WATCHTOWER_LABEL_ENABLE=true
       - WATCHTOWER_CLEANUP=true
       - TZ=${STACK_TIMEZONE}
+    restart: unless-stopped
   homeassistant:
     container_name: homeassistant
     image: homeassistant/home-assistant:stable
@@ -65,6 +66,9 @@ services:
     volumes:
       - /docker/litellm/litellm_config.yaml:/app/config.yaml:ro
     command: ["--config", "/app/config.yaml", "--detailed_debug"]
+    restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
   piper:
     image: rhasspy/wyoming-piper:latest
     container_name: piper
@@ -85,6 +89,8 @@ services:
       - "/dev/snd:/dev/snd"
     group_add:
       - "audio"
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
   whisper:
     image: rhasspy/wyoming-whisper:latest
     container_name: whisper
@@ -104,6 +110,8 @@ services:
       - "/dev/snd:/dev/snd"
     group_add:
       - "audio"
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
   ts-homeassistant:
     image: tailscale/tailscale:latest
     container_name: ts-homeassistant
@@ -124,6 +132,8 @@ services:
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
 
 # set trusted docker internal network
 networks:
