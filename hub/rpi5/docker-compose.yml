@@ -10,6 +10,9 @@ services:
       - WATCHTOWER_CLEANUP=true
       - TZ=${STACK_TIMEZONE}
     restart: unless-stopped
+    labels:
+      # This label allows Watchtower to update itself
+      com.centurylinklabs.watchtower.enable: "true"
   homeassistant:
     container_name: homeassistant
     image: homeassistant/home-assistant:stable
