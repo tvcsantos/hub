@@ -13,6 +13,30 @@ services:
     labels:
       # This label allows Watchtower to update itself
       com.centurylinklabs.watchtower.enable: "true"
+  swag:
+    container_name: swag
+    image: linuxserver/swag:3.0.1
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - /docker/swag/config:/config
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - PGID=1000
+      - PUID=1000
+      - EMAIL=${DUCK_DNS_EMAIL}
+      - URL=${DUCK_DNS_URL}
+      - SUBDOMAINS=wildcard
+      - VALIDATION=duckdns
+      - TZ=${STACK_TIMEZONE}
+      - DUCKDNSTOKEN=${DUCK_DNS_TOKEN}
+    ports:
+      - "180:80"
+      - "1443:443"
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
   homeassistant:
     container_name: homeassistant
     image: homeassistant/home-assistant:stable
