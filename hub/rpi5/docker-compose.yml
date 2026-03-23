@@ -15,7 +15,7 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
   swag:
     container_name: swag
-    image: linuxserver/swag:3.0.1
+    image: linuxserver/swag:5.4.0
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
