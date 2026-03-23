@@ -139,28 +139,6 @@ services:
       - "audio"
     labels:
       com.centurylinklabs.watchtower.enable: "true"
-  ts-homeassistant:
-    image: tailscale/tailscale:latest
-    container_name: ts-homeassistant
-    hostname: ${HOME_ASSISTANT_HOSTNAME}
-    environment:
-      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
-      - TS_EXTRA_ARGS=--advertise-tags=tag:container
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=false
-      - TS_SERVE_CONFIG=/config/tailscale.json
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    volumes:
-      - /docker/ts-homeassistant/state:/var/lib/tailscale
-      - /docker/ts-homeassistant/config:/config
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - NET_ADMIN
-    restart: unless-stopped
-    labels:
-      com.centurylinklabs.watchtower.enable: "true"
   mosquitto:
     image: eclipse-mosquitto:2
     container_name: mosquitto
