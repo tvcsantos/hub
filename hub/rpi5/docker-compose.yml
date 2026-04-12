@@ -152,6 +152,20 @@ services:
       - /docker/mosquitto/log:/mosquitto/log
     labels:
       com.centurylinklabs.watchtower.enable: "true"
+  memos:
+    image: neosmemo/memos:stable
+    container_name: memos
+    restart: unless-stopped
+    ports:
+      - "5230:5230"
+    volumes:
+      - /docker/memos/data:/var/opt/memos
+    environment:
+      MEMOS_PORT: 5230
+      MEMOS_DRIVER: sqlite
+      MEMOS_INSTANCE_URL: https://memos.${DUCK_DNS_URL}
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
 
 # set trusted docker internal network
 networks:
