@@ -51,7 +51,7 @@ services:
       - ${GOOGLE_DRIVE_MOUNT}:/mnt/gdrive
     environment:
       - TZ=${STACK_TIMEZONE}
-      - DISABLE_JEMALLOC=true
+      #- DISABLE_JEMALLOC=true
     restart: unless-stopped
     privileged: true
     network_mode: host
@@ -144,8 +144,8 @@ services:
     container_name: mosquitto
     restart: unless-stopped
     ports:
-      - "1883:1883"     # MQTT
-      - "9001:9001"     # MQTT over WebSockets (optional)
+      - "1883:1883" # MQTT
+      - "9001:9001" # MQTT over WebSockets (optional)
     volumes:
       - /docker/mosquitto/config:/mosquitto/config
       - /docker/mosquitto/data:/mosquitto/data

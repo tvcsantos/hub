@@ -23,7 +23,11 @@ services:
       SCANOPY_HEARTBEAT_INTERVAL: ${SCANOPY_HEARTBEAT_INTERVAL:-30}
       SCANOPY_MODE: ${SCANOPY_MODE:-Push}
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:${SCANOPY_DAEMON_PORT:-60073}/api/health || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:${SCANOPY_DAEMON_PORT:-60073}/api/health || exit 1",
+        ]
       interval: 5s
       timeout: 3s
       retries: 15

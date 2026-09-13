@@ -1,0 +1,111 @@
+logging {
+	level = "info"
+}
+
+prometheus.remote_write "victoriametrics" {
+	endpoint {
+		url = "http://victoriametrics:8428/api/v1/write"
+	}
+}
+
+prometheus.exporter.unix "host" {
+	set_collectors = ["cpu", "diskstats", "filesystem", "loadavg", "meminfo", "netdev"]
+}
+
+prometheus.scrape "host" {
+	targets         = prometheus.exporter.unix.host.targets
+	forward_to      = [prometheus.remote_write.victoriametrics.receiver]
+	scrape_interval = "30s"
+}
+
+discovery.docker "containers" {
+	host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "containers" {
+	targets = discovery.docker.containers.targets
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/(.*)"
+		target_label  = "container"
+	}
+}
+
+discovery.relabel "home_assistant" {
+	targets = discovery.relabel.containers.output
+
+	rule {
+		source_labels = ["container"]
+		regex         = "homeassistant"
+		action        = "keep"
+	}
+}
+
+discovery.relabel "other_containers" {
+	targets = discovery.relabel.containers.output
+
+	rule {
+		source_labels = ["container"]
+		regex         = "homeassistant"
+		action        = "drop"
+	}
+}
+
+loki.source.docker "home_assistant" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.home_assistant.output
+	forward_to = [loki.process.home_assistant.receiver]
+}
+
+loki.source.docker "other_containers" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.other_containers.output
+	forward_to = [loki.write.victorialogs.receiver]
+}
+
+loki.process "home_assistant" {
+	stage.decolorize { }
+
+	stage.multiline {
+		firstline     = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(\\.\\d+)? "
+		max_wait_time = "3s"
+	}
+
+	stage.regex {
+		expression = "(?s)(?P<level>DEBUG|INFO|WARNING|ERROR|CRITICAL) \\([^)]*\\) \\[(?P<component>[^]]+)\\] (?P<message>.*)$"
+	}
+
+	stage.labels {
+		values = {
+			level     = "level",
+			component = "component",
+		}
+	}
+
+	forward_to = [loki.write.victorialogs.receiver]
+}
+
+loki.write "victorialogs" {
+	endpoint {
+		url = "http://victorialogs:9428/insert/loki/api/v1/push"
+	}
+}
+
+otelcol.receiver.otlp "default" {
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
+
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
+
+	output {
+		metrics = [otelcol.exporter.prometheus.victoriametrics.input]
+	}
+}
+
+otelcol.exporter.prometheus "victoriametrics" {
+	forward_to = [prometheus.remote_write.victoriametrics.receiver]
+}

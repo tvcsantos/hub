@@ -25,13 +25,13 @@
 7. Run `bluetoothctl`
 
    `$ sudo bluetoothctl`
-    
+
    > ℹ️ If weird things happen (e.g. console not responding to keyboard, etc...)
    > execute `bluetoothd` try again and check if the error is gone.
 
 8. Now inside `bluetoothctl`
 
-   ```
+   ```text
    [bluetooth]# list  
    # lists the bluetooth interfaces
 
@@ -51,7 +51,7 @@
    # connects to the C0:28:8D:45:3D:79 device
    # it can show a path for every characteristic : the dbus path
    ```
-   
+
    > ℹ️ dbus is a "distributed communication bus". It allows processes
    > to "talk" to each other : it's a "generic" bus that anyone can send
    > datas to and also receive datas.
