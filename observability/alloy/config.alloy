@@ -50,6 +50,22 @@ discovery.relabel "other_containers" {
 		regex         = "homeassistant"
 		action        = "drop"
 	}
+
+	rule {
+		source_labels = ["container"]
+		regex         = "v2c-any"
+		action        = "drop"
+	}
+}
+
+discovery.relabel "v2c_any" {
+	targets = discovery.relabel.containers.output
+
+	rule {
+		source_labels = ["container"]
+		regex         = "v2c-any"
+		action        = "keep"
+	}
 }
 
 loki.source.docker "home_assistant" {
@@ -61,6 +77,38 @@ loki.source.docker "home_assistant" {
 loki.source.docker "other_containers" {
 	host       = "unix:///var/run/docker.sock"
 	targets    = discovery.relabel.other_containers.output
+	forward_to = [loki.write.victorialogs.receiver]
+}
+
+loki.source.docker "v2c_any" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.v2c_any.output
+	forward_to = [loki.process.v2c_any.receiver]
+}
+
+loki.process "v2c_any" {
+	stage.json {
+		expressions = {
+			level = "level",
+			msg   = "msg",
+		}
+	}
+
+	stage.template {
+		source   = "level"
+		template = `{{ if eq (int .Value) 10 }}trace{{ else if eq (int .Value) 20 }}debug{{ else if eq (int .Value) 30 }}info{{ else if eq (int .Value) 40 }}warn{{ else if eq (int .Value) 50 }}error{{ else if eq (int .Value) 60 }}fatal{{ else }}unknown{{ end }}`
+	}
+
+	stage.labels {
+		values = {
+			level = "level",
+		}
+	}
+
+	stage.output {
+		source = "msg"
+	}
+
 	forward_to = [loki.write.victorialogs.receiver]
 }
 
