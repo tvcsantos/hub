@@ -135,9 +135,14 @@ loki.process "v2c_any" {
 }
 
 loki.process "litellm" {
+	stage.decolorize { }
+
 	stage.json {
 		expressions = {
 			level      = "level",
+			message    = "message",
+			component  = "component",
+			logger     = "logger",
 			trace_id   = "trace_id",
 			session_id = "session_id",
 		}
@@ -151,9 +156,15 @@ loki.process "litellm" {
 
 	stage.structured_metadata {
 		values = {
+			component  = "component",
+			logger     = "logger",
 			trace_id   = "trace_id",
 			session_id = "session_id",
 		}
+	}
+
+	stage.output {
+		source = "message"
 	}
 
 	forward_to = [loki.write.victorialogs.receiver]

@@ -101,6 +101,7 @@ services:
       JSON_LOGS: "True"
       LITELLM_LOG: INFO
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      NO_COLOR: "1"
       # If you’re using OpenAI instead, use OPENAI_API_KEY, etc.
       # OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:
