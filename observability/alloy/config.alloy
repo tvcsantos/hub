@@ -69,6 +69,12 @@ discovery.relabel "other_containers" {
 		regex         = "alloy"
 		action        = "drop"
 	}
+
+	rule {
+		source_labels = ["container"]
+		regex         = "scanopy-(?:daemon|server-[0-9]+)"
+		action        = "drop"
+	}
 }
 
 discovery.relabel "v2c_any" {
@@ -101,6 +107,16 @@ discovery.relabel "alloy" {
 	}
 }
 
+discovery.relabel "scanopy" {
+	targets = discovery.relabel.containers.output
+
+	rule {
+		source_labels = ["container"]
+		regex         = "scanopy-(?:daemon|server-[0-9]+)"
+		action        = "keep"
+	}
+}
+
 loki.source.docker "home_assistant" {
 	host       = "unix:///var/run/docker.sock"
 	targets    = discovery.relabel.home_assistant.output
@@ -129,6 +145,12 @@ loki.source.docker "alloy" {
 	host       = "unix:///var/run/docker.sock"
 	targets    = discovery.relabel.alloy.output
 	forward_to = [loki.process.alloy.receiver]
+}
+
+loki.source.docker "scanopy" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.scanopy.output
+	forward_to = [loki.process.scanopy.receiver]
 }
 
 loki.process "v2c_any" {
@@ -224,6 +246,37 @@ loki.process "alloy" {
 
 	stage.output {
 		source = "msg"
+	}
+
+	forward_to = [loki.write.victorialogs.receiver]
+}
+
+loki.process "scanopy" {
+	stage.decolorize { }
+
+	stage.regex {
+		expression = "^\\S+\\s+(?P<level>TRACE|DEBUG|INFO|WARN|ERROR)\\s+(?P<target>\\S+):\\s+(?P<message>.*)$"
+	}
+
+	stage.drop {
+		source     = "message"
+		expression = "^Received healthcheck request$"
+	}
+
+	stage.labels {
+		values = {
+			level = "level",
+		}
+	}
+
+	stage.structured_metadata {
+		values = {
+			target = "target",
+		}
+	}
+
+	stage.output {
+		source = "message"
 	}
 
 	forward_to = [loki.write.victorialogs.receiver]
