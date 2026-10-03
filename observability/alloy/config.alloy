@@ -1,5 +1,6 @@
 logging {
-	level = "info"
+	level  = "info"
+	format = "json"
 }
 
 prometheus.remote_write "victoriametrics" {
@@ -62,6 +63,12 @@ discovery.relabel "other_containers" {
 		regex         = "litellm"
 		action        = "drop"
 	}
+
+	rule {
+		source_labels = ["container"]
+		regex         = "alloy"
+		action        = "drop"
+	}
 }
 
 discovery.relabel "v2c_any" {
@@ -80,6 +87,16 @@ discovery.relabel "litellm" {
 	rule {
 		source_labels = ["container"]
 		regex         = "litellm"
+		action        = "keep"
+	}
+}
+
+discovery.relabel "alloy" {
+	targets = discovery.relabel.containers.output
+
+	rule {
+		source_labels = ["container"]
+		regex         = "alloy"
 		action        = "keep"
 	}
 }
@@ -106,6 +123,12 @@ loki.source.docker "litellm" {
 	host       = "unix:///var/run/docker.sock"
 	targets    = discovery.relabel.litellm.output
 	forward_to = [loki.process.litellm.receiver]
+}
+
+loki.source.docker "alloy" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.alloy.output
+	forward_to = [loki.process.alloy.receiver]
 }
 
 loki.process "v2c_any" {
@@ -165,6 +188,42 @@ loki.process "litellm" {
 
 	stage.output {
 		source = "message"
+	}
+
+	forward_to = [loki.write.victorialogs.receiver]
+}
+
+loki.process "alloy" {
+	stage.json {
+		expressions = {
+			level          = "level",
+			msg            = "msg",
+			component_path = "component_path",
+			component_id   = "component_id",
+			component      = "component",
+			subcomponent   = "subcomponent",
+			service        = "service",
+		}
+	}
+
+	stage.labels {
+		values = {
+			level = "level",
+		}
+	}
+
+	stage.structured_metadata {
+		values = {
+			component_path = "component_path",
+			component_id   = "component_id",
+			component      = "component",
+			subcomponent   = "subcomponent",
+			service        = "service",
+		}
+	}
+
+	stage.output {
+		source = "msg"
 	}
 
 	forward_to = [loki.write.victorialogs.receiver]
