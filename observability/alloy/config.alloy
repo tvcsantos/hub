@@ -75,6 +75,12 @@ discovery.relabel "other_containers" {
 		regex         = "scanopy-(?:daemon|server-[0-9]+)"
 		action        = "drop"
 	}
+
+	rule {
+		source_labels = ["container"]
+		regex         = "scanopy-postgres-[0-9]+"
+		action        = "drop"
+	}
 }
 
 discovery.relabel "v2c_any" {
@@ -117,6 +123,16 @@ discovery.relabel "scanopy" {
 	}
 }
 
+discovery.relabel "scanopy_postgres" {
+	targets = discovery.relabel.containers.output
+
+	rule {
+		source_labels = ["container"]
+		regex         = "scanopy-postgres-[0-9]+"
+		action        = "keep"
+	}
+}
+
 loki.source.docker "home_assistant" {
 	host       = "unix:///var/run/docker.sock"
 	targets    = discovery.relabel.home_assistant.output
@@ -151,6 +167,12 @@ loki.source.docker "scanopy" {
 	host       = "unix:///var/run/docker.sock"
 	targets    = discovery.relabel.scanopy.output
 	forward_to = [loki.process.scanopy.receiver]
+}
+
+loki.source.docker "scanopy_postgres" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.scanopy_postgres.output
+	forward_to = [loki.process.scanopy_postgres.receiver]
 }
 
 loki.process "v2c_any" {
@@ -272,6 +294,30 @@ loki.process "scanopy" {
 	stage.structured_metadata {
 		values = {
 			target = "target",
+		}
+	}
+
+	stage.output {
+		source = "message"
+	}
+
+	forward_to = [loki.write.victorialogs.receiver]
+}
+
+loki.process "scanopy_postgres" {
+	stage.regex {
+		expression = "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)? \\S+ \\[(?P<pid>\\d+)\\] (?P<level>[A-Z][A-Z0-9]*):\\s+(?P<message>.*)$"
+	}
+
+	stage.labels {
+		values = {
+			level = "level",
+		}
+	}
+
+	stage.structured_metadata {
+		values = {
+			pid = "pid",
 		}
 	}
 
