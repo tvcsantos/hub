@@ -37,6 +37,7 @@ services:
     volumes:
       - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
       - alloy-data:/var/lib/alloy
+      - /run/udev/data:/run/udev/data:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       - victoriametrics
