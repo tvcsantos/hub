@@ -116,12 +116,25 @@ loki.process "home_assistant" {
 	stage.decolorize { }
 
 	stage.multiline {
-		firstline     = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(\\.\\d+)? "
+		firstline     = "^(?:\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)? |\\[\\d{2}:\\d{2}:\\d{2}\\] |s6-rc: |services-up: |Found \\d+ non-daemonic threads\\.)"
 		max_wait_time = "3s"
 	}
 
 	stage.regex {
-		expression = "(?s)(?P<level>DEBUG|INFO|WARNING|ERROR|CRITICAL) \\([^)]*\\) \\[(?P<component>[^]]+)\\] (?P<message>.*)$"
+		expression = "(?s)^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)? (?P<level>DEBUG|INFO|WARNING|ERROR|CRITICAL) \\([^)]*\\) \\[(?P<component>[^]]+)\\] (?P<message>.*)$"
+	}
+
+	stage.regex {
+		expression = "(?s)^\\[\\d{2}:\\d{2}:\\d{2}\\] (?P<level>DEBUG|INFO|WARNING|ERROR|CRITICAL): (?P<message>.*)$"
+	}
+
+	stage.regex {
+		expression = "(?s)^(?:s6-rc|services-up): (?P<level>debug|info|warning|error): (?P<message>.*)$"
+	}
+
+	stage.template {
+		source   = "level"
+		template = `{{ ToUpper .Value }}`
 	}
 
 	stage.labels {
@@ -129,6 +142,10 @@ loki.process "home_assistant" {
 			level     = "level",
 			component = "component",
 		}
+	}
+
+	stage.output {
+		source = "message"
 	}
 
 	forward_to = [loki.write.victorialogs.receiver]

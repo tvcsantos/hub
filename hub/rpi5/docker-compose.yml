@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   watchtower:
     container_name: watchtower
@@ -10,6 +16,7 @@ services:
       - WATCHTOWER_CLEANUP=true
       - TZ=${STACK_TIMEZONE}
     restart: unless-stopped
+    logging: *default-logging
     labels:
       # This label allows Watchtower to update itself
       com.centurylinklabs.watchtower.enable: "true"
@@ -17,6 +24,7 @@ services:
     container_name: swag
     image: linuxserver/swag:5.4.0
     restart: unless-stopped
+    logging: *default-logging
     cap_add:
       - NET_ADMIN
     volumes:
@@ -53,6 +61,7 @@ services:
       - TZ=${STACK_TIMEZONE}
       #- DISABLE_JEMALLOC=true
     restart: unless-stopped
+    logging: *default-logging
     privileged: true
     network_mode: host
     labels:
@@ -77,6 +86,7 @@ services:
       - "8080:80"
       - "8443:443"
     restart: unless-stopped
+    logging: *default-logging
     labels:
       com.centurylinklabs.watchtower.enable: "true"
   litellm:
@@ -88,18 +98,21 @@ services:
       # Set whichever provider vars your config needs (example: Azure)
       AZURE_API_KEY: ${AZURE_API_KEY}
       AZURE_API_BASE: ${AZURE_API_BASE}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       # If you’re using OpenAI instead, use OPENAI_API_KEY, etc.
       # OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:
       - /docker/litellm/litellm_config.yaml:/app/config.yaml:ro
     command: ["--config", "/app/config.yaml", "--detailed_debug"]
     restart: unless-stopped
+    logging: *default-logging
     labels:
       com.centurylinklabs.watchtower.enable: "true"
   piper:
     image: rhasspy/wyoming-piper:latest
     container_name: piper
     restart: unless-stopped
+    logging: *default-logging
     # Exposes the Wyoming TCP port for TTS (not HTTP)
     ports:
       - "10200:10200"
@@ -122,6 +135,7 @@ services:
     image: rhasspy/wyoming-whisper:latest
     container_name: whisper
     restart: unless-stopped
+    logging: *default-logging
     ports:
       - "10300:10300"
     # tiny / base / small / medium / large-v3; use *-int8 for Pi 5 speed
@@ -143,6 +157,7 @@ services:
     image: eclipse-mosquitto:2
     container_name: mosquitto
     restart: unless-stopped
+    logging: *default-logging
     ports:
       - "1883:1883" # MQTT
       - "9001:9001" # MQTT over WebSockets (optional)
