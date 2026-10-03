@@ -98,12 +98,14 @@ services:
       # Set whichever provider vars your config needs (example: Azure)
       AZURE_API_KEY: ${AZURE_API_KEY}
       AZURE_API_BASE: ${AZURE_API_BASE}
+      JSON_LOGS: "True"
+      LITELLM_LOG: INFO
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       # If you’re using OpenAI instead, use OPENAI_API_KEY, etc.
       # OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:
       - /docker/litellm/litellm_config.yaml:/app/config.yaml:ro
-    command: ["--config", "/app/config.yaml", "--detailed_debug"]
+    command: ["--config", "/app/config.yaml"]
     restart: unless-stopped
     logging: *default-logging
     labels:

@@ -56,6 +56,12 @@ discovery.relabel "other_containers" {
 		regex         = "v2c-any"
 		action        = "drop"
 	}
+
+	rule {
+		source_labels = ["container"]
+		regex         = "litellm"
+		action        = "drop"
+	}
 }
 
 discovery.relabel "v2c_any" {
@@ -64,6 +70,16 @@ discovery.relabel "v2c_any" {
 	rule {
 		source_labels = ["container"]
 		regex         = "v2c-any"
+		action        = "keep"
+	}
+}
+
+discovery.relabel "litellm" {
+	targets = discovery.relabel.containers.output
+
+	rule {
+		source_labels = ["container"]
+		regex         = "litellm"
 		action        = "keep"
 	}
 }
@@ -84,6 +100,12 @@ loki.source.docker "v2c_any" {
 	host       = "unix:///var/run/docker.sock"
 	targets    = discovery.relabel.v2c_any.output
 	forward_to = [loki.process.v2c_any.receiver]
+}
+
+loki.source.docker "litellm" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.litellm.output
+	forward_to = [loki.process.litellm.receiver]
 }
 
 loki.process "v2c_any" {
@@ -107,6 +129,31 @@ loki.process "v2c_any" {
 
 	stage.output {
 		source = "msg"
+	}
+
+	forward_to = [loki.write.victorialogs.receiver]
+}
+
+loki.process "litellm" {
+	stage.json {
+		expressions = {
+			level      = "level",
+			trace_id   = "trace_id",
+			session_id = "session_id",
+		}
+	}
+
+	stage.labels {
+		values = {
+			level = "level",
+		}
+	}
+
+	stage.structured_metadata {
+		values = {
+			trace_id   = "trace_id",
+			session_id = "session_id",
+		}
 	}
 
 	forward_to = [loki.write.victorialogs.receiver]
